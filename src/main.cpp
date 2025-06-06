@@ -5,20 +5,20 @@ WiFiMulti wifiMulti;
 #include <InfluxDbCloud.h>
 
 #define TZ_INFO "UTC2"
-
-#define LIGHT_SENSOR_PIN 34
 #define DEVICE "ESP32"
 
-// === Включить ЭМУЛЯЦИЮ данных ===
-// закомментируй следующую строку, чтобы использовать реальный датчик
-#define EMULATE_SENSOR_DATA
+// Настройки для измерения температуры
+#define THERMISTOR_PIN 39      // VN = GPIO39
+#define T0 28.2               // Температура при калибровке
+#define VF0 373.60           // Напряжение на диоде при T0 в милливольтах
+#define K 0.4545454            // 1 / 2.2mV/°C
 
 InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKEN, InfluxDbCloud2CACert);
-Point sensor("light");
+Point sensor("temperature");
 
 void setup() {
   Serial.begin(115200);
-  analogReadResolution(12);
+  analogReadResolution(12);  // 12-битный АЦП
 
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
@@ -42,48 +42,35 @@ void setup() {
 }
 
 void loop() {
-  int lightValue;
+  float dtemp_avg = 0;
+  float vf_raw_avg = 0;
 
-#ifdef EMULATE_SENSOR_DATA
-  // === Эмуляция значения ===
-  static int emulatedLightValue = 200;           // начальное значение
-  static int increment = 100;                     // шаг нарастания
-  static unsigned long lastUpdate = 0;
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - lastUpdate >= 500) {       // обновляем каждые 100 мс
-    emulatedLightValue += increment;
-    if (emulatedLightValue >= 3500) {
-      emulatedLightValue = 500;                  // перезапуск цикла
-    }
-    lastUpdate = currentMillis;
+  // Измерим 1024 раза и усредним
+  for (int i = 0; i < 1024; i++) {
+    float raw = analogRead(THERMISTOR_PIN);
+    float vf = raw * (3300.0 / 4095.0);  // перевод в милливольты
+    float dtemp = (vf - VF0) * K;
+    dtemp_avg += dtemp;
+    vf_raw_avg += vf;
   }
 
-  lightValue = emulatedLightValue;
-  Serial.print("[EMULATION MODE] Light value: ");
-  Serial.println(lightValue);
-#else
-  // === Реальное чтение ===
-  lightValue = analogRead(LIGHT_SENSOR_PIN);
-#endif
+  float temperatureC = T0 - (dtemp_avg / 1024.0);
+  float vf_avg = vf_raw_avg / 1024.0;
 
-  float lightPercent = (lightValue / 4095.0) * 100.0;
+  // Отладка
+  Serial.print("Temperature (°C): ");
+  Serial.println(temperatureC);
+  Serial.print("Vf avg (mV): ");
+  Serial.println(vf_avg);
 
+  // Отправка в InfluxDB
   sensor.clearFields();
-  sensor.addField("light_raw", lightValue);
-  sensor.addField("light_percent", lightPercent);
+  sensor.addField("temperature_c", temperatureC);
+  sensor.addField("temperature_raw_mv", vf_avg);
 
   if (!client.writePoint(sensor)) {
     Serial.print("Write failed: ");
     Serial.println(client.getLastErrorMessage());
-  } else {
-#ifdef EMULATE_SENSOR_DATA
-    Serial.print("Emulated Light: ");
-#else
-    Serial.print("Light: ");
-#endif
-    Serial.print(lightPercent);
-    Serial.println(" %");
   }
 
   delay(1000);
