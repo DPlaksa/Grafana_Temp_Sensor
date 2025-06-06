@@ -1,0 +1,8 @@
+from(bucket: "esp")
+  |> range(start: -15s)
+  |> filter(fn: (r) =>
+    r._measurement == "temperature" and
+    r._field == "temperature_c" and
+    r.device == "ESP32"
+  )
+  |> last()
