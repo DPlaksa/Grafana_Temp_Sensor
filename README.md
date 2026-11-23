@@ -1,4 +1,4 @@
-# 🌡️ ESP32 Temperature Monitor with Grafana Dashboard
+# ESP32 Temperature Monitor with Grafana Dashboard
 
 [![IoT](https://img.shields.io/badge/Tag-IoT-blue)](https://github.com/your-repo)
 [![Language: C++](https://img.shields.io/badge/Language-C++-green.svg)](https://github.com/your-repo)
@@ -6,30 +6,37 @@
 [![Grafana](https://img.shields.io/badge/Visualization-Grafana-orange)](https://grafana.com/)
 [![Driver: CP210x](https://img.shields.io/badge/Driver-CP210x-lightgrey)](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
 
+
+
+
+
+
 A IoT solution that reads temperature from an **ESP32** using 1N4148 as sensor and pushes data to a **Grafana dashboard** for real-time monitoring. Built with **C++** on the hardware side and a **Python** with `.env` configuration support.
 
 ![Alt Text](embedded_schematics.jpg)
+![Alt Text](sensor_real_look_2.jpeg)
+![Alt Text](sensor_real_look.jpeg)
 
 
 **Indication:**
-- 🟢 **Green LED blinking** – Wi-Fi connected successfully  
-- 🔴 **Red LED blinking** – Sensor threshold reached (hardcoded in C++)
+- **Green LED blinking** – Wi-Fi connected successfully  
+- **Red LED blinking** – Sensor threshold reached (hardcoded in C++)
 
 ---
 
-## 📦 Features
+## Features
 
-- ✅ Real-time temperature monitoring via ESP32-WROOM
-- ✅ WIFI
-- ✅ Environment-based configuration using `python-dotenv`
-- ✅ Grafana dashboard for data visualization
+- Real-time temperature monitoring via ESP32-WROOM
+- WIFI
+- Environment-based configuration using `python-dotenv`
+- Grafana dashboard for data visualization
 
 ![Alt Text](dashboard.jpeg)
 
 
 ---
 
-### 🖥️ Software Requirements
+### Software Requirements
 
 
 - [Platform IO](https://platformio.org/) - needed for flashing the ESP32 and auto-installing required C++ libraries(list of libs described in platformio.ini file)
@@ -47,12 +54,12 @@ pip install -r requirements.txt
 
 ## Example of Grafana Configuration
 
-### 🐳 Docker Image
+### Docker Image
 
 **Image:**  
 [dplaksa/grafana_custom](https://hub.docker.com/r/dplaksa/grafana_custom)
 
-### 🚀 Run Command
+### Run Command
 
 ```bash
 docker run -d -p 8080:3000 dplaksa/grafana_custom:latest
